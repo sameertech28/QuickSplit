@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="hero-section text-center">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <h1 class="display-4 fw-bold mb-4" style="color: #1e293b;">
+                    Split expenses. <br>
+                    <span class="text-primary">Keep friendships.</span>
+                </h1>
+                <p class="lead text-muted mb-5 px-md-5">
+                    The smart, beautiful, and effortless way to share bills, track balances, and settle up with friends, roommates, and family.
+                </p>
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="{% url 'signup' %}" class="btn btn-primary btn-lg px-5 shadow-sm">Start for Free</a>
+                    <a href="#features" class="btn btn-outline-secondary btn-lg px-5 bg-white">Learn More</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="features" class="container py-5 my-5">
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="glass-card h-100 text-center">
+                <div class="mb-4 text-primary">
+                    <i class="fa-solid fa-bolt fa-3x"></i>
+                </div>
+                <h3 class="h5 fw-bold">Instant Splitting</h3>
+                <p class="text-muted">Quickly split bills evenly, by percentage, or item-by-item. No more complicated math.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-card h-100 text-center">
+                <div class="mb-4 text-primary">
+                    <i class="fa-solid fa-camera fa-3x"></i>
+                </div>
+                <h3 class="h5 fw-bold">Smart Receipt Scanning</h3>
+                <p class="text-muted">Just snap a photo of your receipt. Our AI extracts items and amounts instantly.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-card h-100 text-center">
+                <div class="mb-4 text-primary">
+                    <i class="fa-solid fa-globe fa-3x"></i>
+                </div>
+                <h3 class="h5 fw-bold">Multi-Currency</h3>
+                <p class="text-muted">Traveling abroad? Add expenses in any currency and auto-convert to your local one.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

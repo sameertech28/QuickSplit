@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard | QuickSplit{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-5 align-items-center">
+        <div class="col-md-8">
+            <h2 class="fw-bold">Welcome back, {{ user.first_name|default:user.username }}!</h2>
+            <p class="text-muted mb-0">Here is an overview of your shared expenses.</p>
+        </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <button class="btn btn-primary"><i class="fa-solid fa-plus me-2"></i>New Group</button>
+        </div>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="glass-card stat-card border-top border-4 border-primary">
+                <div class="stat-value">{{ net_balance }}</div>
+                <div class="stat-label">Total Balance</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-card stat-card border-top border-4 border-success">
+                <div class="stat-value text-positive">{{ total_owed_to_you }}</div>
+                <div class="stat-label">You are owed</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-card stat-card border-top border-4 border-danger">
+                <div class="stat-value text-negative">{{ total_you_owe }}</div>
+                <div class="stat-label">You owe</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Groups -->
+        <div class="col-md-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold mb-0">Your Groups</h4>
+                <a href="#" class="text-decoration-none small">View All</a>
+            </div>
+            
+            {% if groups %}
+                <div class="row g-4">
+                    {% for group in groups %}
+                    <div class="col-md-6">
+                        <div class="glass-card h-100 p-4">
+                            <h5 class="fw-bold text-truncate">{{ group.name }}</h5>
+                            <p class="text-muted small mb-3">{{ group.member_count }} members &bull; {{ group.get_category_display }}</p>
+                            <a href="#" class="btn btn-outline-primary btn-sm w-100">View Details</a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="glass-card text-center py-5">
+                    <i class="fa-solid fa-users fa-3x text-muted mb-3"></i>
+                    <h5>No groups yet</h5>
+                    <p class="text-muted">Create a group to start sharing expenses.</p>
+                    <button class="btn btn-primary mt-2">Create First Group</button>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="col-md-4 mt-5 mt-md-0">
+            <h4 class="fw-bold mb-4">Recent Activity</h4>
+            <div class="glass-card p-0 overflow-hidden">
+                <ul class="list-group list-group-flush">
+                    {% for expense in recent_expenses %}
+                        <li class="list-group-item p-4 bg-transparent">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1 fw-bold">{{ expense.title }}</h6>
+                                    <small class="text-muted">{{ expense.paid_by.username }} paid {{ expense.currency }} {{ expense.amount }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-light text-dark border">{{ expense.group.name }}</span>
+                                </div>
+                            </div>
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item p-4 text-center text-muted bg-transparent border-0">
+                            No recent activity to show.
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
