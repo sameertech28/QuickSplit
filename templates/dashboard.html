@@ -10,7 +10,7 @@
             <p class="text-muted mb-0">Here is an overview of your shared expenses.</p>
         </div>
         <div class="col-md-4 text-md-end mt-3 mt-md-0">
-            <button class="btn btn-primary"><i class="fa-solid fa-plus me-2"></i>New Group</button>
+            <a href="{% url 'groups:create' %}" class="btn btn-primary"><i class="fa-solid fa-plus me-2"></i>New Group</a>
         </div>
     </div>
 
@@ -51,7 +51,7 @@
                         <div class="glass-card h-100 p-4">
                             <h5 class="fw-bold text-truncate">{{ group.name }}</h5>
                             <p class="text-muted small mb-3">{{ group.member_count }} members &bull; {{ group.get_category_display }}</p>
-                            <a href="#" class="btn btn-outline-primary btn-sm w-100">View Details</a>
+                            <a href="{% url 'groups:detail' group.pk %}" class="btn btn-outline-primary btn-sm w-100">View Details</a>
                         </div>
                     </div>
                     {% endfor %}
@@ -61,13 +61,43 @@
                     <i class="fa-solid fa-users fa-3x text-muted mb-3"></i>
                     <h5>No groups yet</h5>
                     <p class="text-muted">Create a group to start sharing expenses.</p>
-                    <button class="btn btn-primary mt-2">Create First Group</button>
+                    <a href="{% url 'groups:create' %}" class="btn btn-primary mt-2">Create First Group</a>
                 </div>
             {% endif %}
         </div>
 
         <!-- Recent Activity -->
         <div class="col-md-4 mt-5 mt-md-0">
+            {% if pending_invitations %}
+            <h4 class="fw-bold mb-4">Pending Invitations</h4>
+            <div class="glass-card p-0 overflow-hidden mb-5">
+                <ul class="list-group list-group-flush">
+                    {% for invite in pending_invitations %}
+                    <li class="list-group-item p-4 bg-transparent border-0 border-bottom">
+                        <div class="d-flex flex-column">
+                            <div class="mb-2">
+                                <h6 class="mb-1 fw-bold">{{ invite.group.name }}</h6>
+                                <small class="text-muted">Invited by {{ invite.invited_by.username }}</small>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <form action="{% url 'groups:accept_invitation' invite.pk %}" method="post" class="flex-grow-1">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="accept">
+                                    <button type="submit" class="btn btn-success btn-sm w-100"><i class="fa-solid fa-check me-1"></i>Accept</button>
+                                </form>
+                                <form action="{% url 'groups:accept_invitation' invite.pk %}" method="post" class="flex-grow-1">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="decline">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm w-100"><i class="fa-solid fa-times me-1"></i>Decline</button>
+                                </form>
+                            </div>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
             <h4 class="fw-bold mb-4">Recent Activity</h4>
             <div class="glass-card p-0 overflow-hidden">
                 <ul class="list-group list-group-flush">

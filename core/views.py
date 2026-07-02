@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Sum, Q, Count
 from .forms import SignUpForm, LoginForm, UserProfileForm
-from groups.models import Group, GroupMember
+from groups.models import Group, GroupMember, Invitation
 from expenses.models import Expense, ExpenseSplit
 
 
@@ -85,6 +85,9 @@ def dashboard_view(request):
         group__in=groups
     ).select_related('paid_by', 'group').order_by('-date')[:10]
 
+    # Fetch pending invitations for this user (case-insensitive)
+    pending_invitations = Invitation.objects.filter(email__iexact=user.email, status='pending').select_related('group', 'invited_by')
+
     context = {
         'groups': groups,
         'total_you_owe': total_you_owe,
@@ -92,6 +95,7 @@ def dashboard_view(request):
         'net_balance': total_owed_to_you - total_you_owe,
         'recent_expenses': recent_expenses,
         'group_count': len(groups),
+        'pending_invitations': pending_invitations,
     }
     return render(request, 'dashboard.html', context)
 
