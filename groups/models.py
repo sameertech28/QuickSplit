@@ -66,3 +66,28 @@ class GroupMember(models.Model):
     @property
     def display_name(self):
         return self.nickname or self.user.get_full_name() or self.user.username
+
+
+class Invitation(models.Model):
+    """An invitation for a user (by email) to join a group."""
+
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('declined', 'Declined'),
+    ]
+
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, related_name='invitations')
+    email = models.EmailField()
+    invited_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_invitations')
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('group', 'email')
+        verbose_name = 'Invitation'
+        verbose_name_plural = 'Invitations'
+
+    def __str__(self):
+        return f"{self.email} to {self.group.name} ({self.status})"
+

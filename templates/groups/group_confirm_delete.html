@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete {{ group.name }} | QuickSplit{% endblock %}
+
+{% block content %}
+<div class="container py-5 my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="glass-card p-5 border-top border-4 border-danger">
+                <div class="text-center mb-4">
+                    <div class="text-danger mb-3"><i class="fa-solid fa-triangle-exclamation fa-3x"></i></div>
+                    <h2 class="fw-bold">Delete Group</h2>
+                    <p class="text-muted">Are you sure you want to delete <strong>{{ group.name }}</strong>?</p>
+                </div>
+                
+                <div class="alert alert-warning">
+                    <i class="fa-solid fa-circle-info me-2"></i> This action cannot be undone. All expenses, splits, and member records associated with this group will be permanently removed.
+                </div>
+
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+                    <div class="d-grid gap-3 d-md-flex justify-content-md-center">
+                        <a href="{% url 'groups:detail' group.pk %}" class="btn btn-outline-secondary px-4 py-2">Cancel</a>
+                        <button type="submit" class="btn btn-danger px-4 py-2"><i class="fa-solid fa-trash me-2"></i>Delete Group</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
