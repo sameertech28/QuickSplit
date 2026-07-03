@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.db.models import Sum, Q, Count
 from .forms import SignUpForm, LoginForm, UserProfileForm
 from groups.models import Group, GroupMember, Invitation
-from expenses.models import Expense, ExpenseSplit
+from expenses.models import Expense, Contribution
 
 
 def landing_page(request):
@@ -69,30 +69,29 @@ def dashboard_view(request):
     groups = [m.group for m in memberships]
 
     # Calculate summary stats
-    total_you_owe = ExpenseSplit.objects.filter(
-        user=user, is_settled=False
-    ).exclude(expense__paid_by=user).aggregate(
+    total_contributed = Contribution.objects.filter(
+        user=user
+    ).aggregate(
         total=Sum('amount')
     )['total'] or 0
 
-    total_owed_to_you = ExpenseSplit.objects.filter(
-        expense__paid_by=user, is_settled=False
-    ).exclude(user=user).aggregate(
+    total_created_expenses = Expense.objects.filter(
+        created_by=user
+    ).aggregate(
         total=Sum('amount')
     )['total'] or 0
 
     recent_expenses = Expense.objects.filter(
         group__in=groups
-    ).select_related('paid_by', 'group').order_by('-date')[:10]
+    ).select_related('created_by', 'group').order_by('-date')[:10]
 
     # Fetch pending invitations for this user (case-insensitive)
     pending_invitations = Invitation.objects.filter(email__iexact=user.email, status='pending').select_related('group', 'invited_by')
 
     context = {
         'groups': groups,
-        'total_you_owe': total_you_owe,
-        'total_owed_to_you': total_owed_to_you,
-        'net_balance': total_owed_to_you - total_you_owe,
+        'total_contributed': total_contributed,
+        'total_created_expenses': total_created_expenses,
         'recent_expenses': recent_expenses,
         'group_count': len(groups),
         'pending_invitations': pending_invitations,

@@ -41,7 +41,7 @@ def group_detail(request, pk):
         return redirect('dashboard')
     
     members = group.group_members.select_related('user').all()
-    expenses = group.expenses.select_related('paid_by').order_by('-date')[:10]
+    expenses = group.expenses.select_related('created_by').order_by('-date')[:10]
     invitations = group.invitations.filter(status='pending')
     
     # Check if current user is admin
