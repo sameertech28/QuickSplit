@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ expense.title }} | QuickSplit{% endblock %}
+
+{% block content %}
+<div class="container py-5 my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <a href="{% url 'groups:detail' group.pk %}" class="text-decoration-none text-muted">
+                    <i class="bi bi-arrow-left"></i> Back to Group
+                </a>
+                {% if is_admin %}
+                <div>
+                    <a href="{% url 'expenses:edit' expense.pk %}" class="btn btn-sm btn-outline-light me-2">Edit</a>
+                    <a href="{% url 'expenses:delete' expense.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Expense Info Card -->
+            <div class="glass-card p-5 mb-4">
+                <div class="d-flex justify-content-between align-items-start mb-4 border-bottom border-secondary pb-4">
+                    <div>
+                        <h2 class="fw-bold mb-1">{{ expense.title }}</h2>
+                        <p class="text-muted mb-0">Created by {{ expense.created_by.get_full_name|default:expense.created_by.username }} on {{ expense.date|date:"M d, Y" }}</p>
+                        <span class="badge bg-secondary mt-2">{{ expense.get_category_display }}</span>
+                    </div>
+                    <div class="text-end">
+                        <h1 class="text-primary mb-0">{{ expense.currency }} {{ expense.amount }}</h1>
+                        <small class="text-muted">Total expense</small>
+                    </div>
+                </div>
+
+                {% if expense.description %}
+                <div class="mb-4">
+                    <h5 class="text-light">Description</h5>
+                    <p class="text-muted">{{ expense.description }}</p>
+                </div>
+                {% endif %}
+
+                {% if expense.receipt_image %}
+                <div class="mb-4">
+                    <h5 class="text-light">Receipt</h5>
+                    <img src="{{ expense.receipt_image.url }}" alt="Receipt for {{ expense.title }}" class="img-fluid rounded border border-secondary" style="max-height: 300px; object-fit: contain;">
+                </div>
+                {% endif %}
+
+                <!-- Contribution Summary -->
+                <div class="row text-center mb-4">
+                    <div class="col-4">
+                        <div class="glass-card p-3">
+                            <div class="text-muted small mb-1">Total Expense</div>
+                            <div class="fw-bold text-light fs-5">{{ expense.currency }} {{ expense.amount }}</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="glass-card p-3">
+                            <div class="text-muted small mb-1">Total Contributed</div>
+                            <div class="fw-bold text-success fs-5">{{ expense.currency }} {{ expense.total_contributed }}</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="glass-card p-3">
+                            <div class="text-muted small mb-1">Remaining</div>
+                            <div class="fw-bold {% if expense.remaining > 0 %}text-warning{% else %}text-success{% endif %} fs-5">{{ expense.currency }} {{ expense.remaining }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contributions List -->
+                <div>
+                    <h5 class="text-light mb-3"><i class="fa-solid fa-hand-holding-dollar me-2"></i>Contributions</h5>
+                    <div class="list-group list-group-flush glass-card rounded overflow-hidden mb-4">
+                        {% for contribution in contributions %}
+                        <div class="list-group-item bg-transparent border-secondary text-light d-flex justify-content-between align-items-center py-3">
+                            <div>
+                                <strong>{{ contribution.user.get_full_name|default:contribution.user.username }}</strong>
+                                <span class="text-muted ms-2">paid</span>
+                                <span class="fw-bold text-success ms-1">{{ expense.currency }} {{ contribution.amount }}</span>
+                                {% if contribution.note %}
+                                <br><small class="text-muted"><i class="fa-solid fa-comment me-1"></i>{{ contribution.note }}</small>
+                                {% endif %}
+                                <br><small class="text-muted">{{ contribution.created_at|date:"M d, Y h:i A" }}</small>
+                            </div>
+                            <div>
+                                {% if contribution.user == request.user %}
+                                <form method="post" action="{% url 'expenses:contribution_delete' contribution.pk %}" style="display:inline;" onsubmit="return confirm('Remove your contribution of {{ expense.currency }} {{ contribution.amount }}?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete your contribution">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="list-group-item bg-transparent border-secondary text-muted text-center py-4">
+                            <i class="fa-solid fa-piggy-bank fa-2x mb-2 d-block"></i>
+                            No contributions yet. Be the first to record your payment!
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Add Contribution Form -->
+                <div class="glass-card p-4" style="border: 1px solid rgba(110, 87, 224, 0.3);">
+                    <h5 class="text-light mb-3"><i class="fa-solid fa-plus-circle me-2 text-primary"></i>Record Your Contribution</h5>
+                    <form method="post" action="{% url 'expenses:contribution_add' expense.pk %}">
+                        {% csrf_token %}
+                        <div class="row g-3 align-items-end">
+                            <div class="col-sm-4">
+                                <label for="id_amount" class="form-label text-muted small">Amount ({{ expense.currency }})</label>
+                                {{ contribution_form.amount }}
+                            </div>
+                            <div class="col-sm-5">
+                                <label for="id_note" class="form-label text-muted small">Note (optional)</label>
+                                {{ contribution_form.note }}
+                            </div>
+                            <div class="col-sm-3 d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fa-solid fa-check me-1"></i> I Paid
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

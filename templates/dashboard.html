@@ -16,22 +16,16 @@
 
     <!-- Summary Stats -->
     <div class="row g-4 mb-5">
-        <div class="col-md-4">
-            <div class="glass-card stat-card border-top border-4 border-primary">
-                <div class="stat-value">{{ net_balance }}</div>
-                <div class="stat-label">Total Balance</div>
-            </div>
-        </div>
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="glass-card stat-card border-top border-4 border-success">
-                <div class="stat-value text-positive">{{ total_owed_to_you }}</div>
-                <div class="stat-label">You are owed</div>
+                <div class="stat-value text-positive">${{ total_contributed }}</div>
+                <div class="stat-label">Total Contributed</div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="glass-card stat-card border-top border-4 border-danger">
-                <div class="stat-value text-negative">{{ total_you_owe }}</div>
-                <div class="stat-label">You owe</div>
+        <div class="col-md-6">
+            <div class="glass-card stat-card border-top border-4 border-primary">
+                <div class="stat-value">${{ total_created_expenses }}</div>
+                <div class="stat-label">Total Admin Expenses</div>
             </div>
         </div>
     </div>
@@ -102,17 +96,17 @@
             <div class="glass-card p-0 overflow-hidden">
                 <ul class="list-group list-group-flush">
                     {% for expense in recent_expenses %}
-                        <li class="list-group-item p-4 bg-transparent">
+                        <a href="{% url 'expenses:detail' expense.pk %}" class="list-group-item list-group-item-action p-4 bg-transparent text-decoration-none">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h6 class="mb-1 fw-bold">{{ expense.title }}</h6>
-                                    <small class="text-muted">{{ expense.paid_by.username }} paid {{ expense.currency }} {{ expense.amount }}</small>
+                                    <h6 class="mb-1 fw-bold text-light">{{ expense.title }}</h6>
+                                    <small class="text-muted">Created by {{ expense.created_by.username }} &bull; {{ expense.currency }} {{ expense.amount }}</small>
                                 </div>
                                 <div class="text-end">
                                     <span class="badge bg-light text-dark border">{{ expense.group.name }}</span>
                                 </div>
                             </div>
-                        </li>
+                        </a>
                     {% empty %}
                         <li class="list-group-item p-4 text-center text-muted bg-transparent border-0">
                             No recent activity to show.

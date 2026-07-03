@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Expense | QuickSplit{% endblock %}
+
+{% block content %}
+<div class="container py-5 my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="glass-card p-5 text-center">
+                <i class="bi bi-exclamation-triangle-fill text-warning" style="font-size: 3rem;"></i>
+                <h2 class="fw-bold mt-3 mb-4">Delete Expense?</h2>
+                
+                <p class="text-light mb-4">
+                    Are you sure you want to delete the expense <strong>"{{ expense.title }}"</strong> ({{ expense.currency }} {{ expense.amount }}) from group <strong>{{ group.name }}</strong>?
+                </p>
+                <p class="text-danger small mb-4">This action cannot be undone and will affect group balances.</p>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-danger py-2">Yes, Delete Expense</button>
+                        <a href="{% url 'expenses:detail' expense.pk %}" class="btn btn-link text-muted text-decoration-none">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
