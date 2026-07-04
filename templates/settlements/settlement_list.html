@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Settlements for {{ group.name }} | QuickSplit{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-decoration-none">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'groups:detail' group.pk %}" class="text-decoration-none">{{ group.name }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Settlements</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold">Settlements</h2>
+            <p class="text-muted mb-0">Record and track payments between members in {{ group.name }}.</p>
+        </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <a href="{% url 'settlements:create' group.pk %}" class="btn btn-primary"><i class="fa-solid fa-hand-holding-dollar me-2"></i>Record Payment</a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="glass-card p-0 overflow-hidden">
+                <ul class="list-group list-group-flush">
+                    {% for settlement in settlements %}
+                        <li class="list-group-item p-4 bg-transparent d-flex flex-column flex-md-row justify-content-between align-items-center">
+                            <div class="mb-3 mb-md-0">
+                                <h5 class="mb-1 fw-bold text-light">
+                                    {{ settlement.from_user.username }} paid {{ settlement.to_user.username }}
+                                </h5>
+                                <p class="text-muted small mb-1">
+                                    <i class="fa-solid fa-money-bill-transfer me-1"></i> {{ settlement.get_payment_method_display }}
+                                    &bull; <i class="fa-regular fa-clock me-1"></i> {{ settlement.created_at|date:"M d, Y" }}
+                                </p>
+                                {% if settlement.notes %}
+                                    <p class="text-muted small fst-italic mb-0">"{{ settlement.notes }}"</p>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="text-end me-3">
+                                    <h4 class="fw-bold text-primary mb-1">{{ settlement.currency }} {{ settlement.amount }}</h4>
+                                    {% if settlement.is_completed %}
+                                        <span class="badge bg-success"><i class="fa-solid fa-check-circle me-1"></i>Confirmed</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark"><i class="fa-regular fa-hourglass-half me-1"></i>Pending</span>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if not settlement.is_completed and request.user.id == settlement.to_user.id %}
+                                    <form action="{% url 'settlements:complete' settlement.pk %}" method="post">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Confirm you received this payment?');">
+                                            <i class="fa-solid fa-check me-1"></i> Confirm Receipt
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item p-5 text-center text-muted bg-transparent border-0">
+                            <i class="fa-solid fa-money-bill-wave fa-3x mb-3 text-light-muted"></i>
+                            <h5>No settlements yet</h5>
+                            <p>When you pay someone back, record it here.</p>
+                            <a href="{% url 'settlements:create' group.pk %}" class="btn btn-outline-primary mt-2">Record a Payment</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

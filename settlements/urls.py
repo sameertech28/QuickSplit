@@ -1,7 +1,10 @@
 from django.urls import path
+from . import views
 
 app_name = 'settlements'
 
 urlpatterns = [
-    # Settlement endpoints will be added on Day 4
+    path('group/<int:group_id>/', views.settlement_list, name='list'),
+    path('group/<int:group_id>/record/', views.settlement_create, name='create'),
+    path('<int:pk>/complete/', views.settlement_complete, name='complete'),
 ]
