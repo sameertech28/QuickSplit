@@ -42,6 +42,8 @@ def expense_create(request, group_id):
     })
 
 
+from decimal import Decimal
+
 @login_required
 def expense_detail(request, pk):
     expense = get_object_or_404(
@@ -58,12 +60,28 @@ def expense_detail(request, pk):
     contribution_form = ContributionForm()
     is_admin = _is_group_admin(request.user, group)
 
+    # Calculate expected share and who hasn't paid their part for THIS expense
+    members = group.group_members.select_related('user').all()
+    num_members = members.count()
+    expected_share = (expense.amount / Decimal(num_members)) if num_members > 0 else Decimal('0.00')
+
+    missing_shares = []
+    for member in members:
+        paid = sum((c.amount for c in contributions if c.user_id == member.user_id), Decimal('0.00'))
+        shortfall = round(expected_share - paid, 2)
+        if shortfall > 0:
+            missing_shares.append({
+                'display_name': member.display_name,
+                'shortfall': shortfall
+            })
+
     return render(request, 'expenses/expense_detail.html', {
         'expense': expense,
         'contributions': contributions,
         'contribution_form': contribution_form,
         'group': group,
         'is_admin': is_admin,
+        'missing_shares': missing_shares,
     })
 
 

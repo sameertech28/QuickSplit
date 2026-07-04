@@ -21,7 +21,16 @@
             <a href="{% url 'groups:delete' group.pk %}" class="btn btn-outline-danger me-2"><i class="fa-solid fa-trash"></i> Delete</a>
             <a href="{% url 'groups:invite' group.pk %}" class="btn btn-primary"><i class="fa-solid fa-user-plus me-2"></i>Invite</a>
             <a href="{% url 'expenses:create' group.pk %}" class="btn btn-success ms-2"><i class="fa-solid fa-receipt me-2"></i>Add Expense</a>
+            <form action="{% url 'groups:archive' group.pk %}" method="post" class="d-inline ms-2">
+                {% csrf_token %}
+                {% if group.is_active %}
+                <button type="submit" class="btn btn-warning" onclick="return confirm('Mark this group as complete and archive it?');"><i class="fa-solid fa-box-archive me-1"></i>Mark Complete</button>
+                {% else %}
+                <button type="submit" class="btn btn-outline-success" onclick="return confirm('Restore this group to active?');"><i class="fa-solid fa-rotate-left me-1"></i>Restore</button>
+                {% endif %}
+            </form>
             {% endif %}
+            <a href="{% url 'settlements:list' group.pk %}" class="btn btn-info ms-2 text-white"><i class="fa-solid fa-money-bill-transfer me-2"></i>Settlements</a>
         </div>
     </div>
 
@@ -50,7 +59,7 @@
 
             {% if invitations %}
             <h4 class="fw-bold mb-3">Pending Invites</h4>
-            <div class="glass-card p-0 overflow-hidden">
+            <div class="glass-card p-0 mb-4 overflow-hidden">
                 <ul class="list-group list-group-flush">
                     {% for invite in invitations %}
                         <li class="list-group-item p-3 bg-transparent d-flex justify-content-between align-items-center">
@@ -58,6 +67,58 @@
                                 <span class="fw-bold">{{ invite.email }}</span>
                                 <div class="small text-muted">Invited by {{ invite.invited_by.username }}</div>
                             </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <h4 class="fw-bold mb-3">Group Balances</h4>
+            <div class="glass-card p-0 mb-4 overflow-hidden">
+                <div class="p-3 border-bottom border-secondary bg-dark bg-opacity-25 d-flex justify-content-between align-items-center">
+                    <div>
+                        <small class="text-muted text-uppercase fw-bold">Total Group Spend</small>
+                        <h5 class="fw-bold mb-0 text-light">${{ total_group_spend }}</h5>
+                    </div>
+                    <div class="text-end">
+                        <small class="text-muted text-uppercase fw-bold">Per Person</small>
+                        <h5 class="fw-bold mb-0 text-light">${{ share_per_person }}</h5>
+                    </div>
+                </div>
+                <ul class="list-group list-group-flush">
+                    {% for balance_data in balances %}
+                        <li class="list-group-item p-3 bg-transparent d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="fw-bold d-block">{{ balance_data.display_name }}</span>
+                                <small class="text-muted">Paid: ${{ balance_data.total_paid }}</small>
+                            </div>
+                            <div class="text-end">
+                                {% if balance_data.balance > 0 %}
+                                    <span class="text-success fw-bold d-block">gets back ${{ balance_data.balance }}</span>
+                                {% elif balance_data.balance < 0 %}
+                                    <span class="text-danger fw-bold d-block">owes ${{ balance_data.abs_balance }}</span>
+                                {% else %}
+                                    <span class="text-muted fw-bold d-block">settled up</span>
+                                {% endif %}
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            {% if suggested_settlements %}
+            <h4 class="fw-bold mb-3">Who Owes Whom</h4>
+            <div class="glass-card p-0 overflow-hidden">
+                <ul class="list-group list-group-flush">
+                    {% for suggestion in suggested_settlements %}
+                        <li class="list-group-item p-3 bg-transparent d-flex flex-column gap-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold">{{ suggestion.from_name }} <i class="fa-solid fa-arrow-right mx-1 text-muted"></i> {{ suggestion.to_name }}</span>
+                                <span class="fw-bold text-warning">${{ suggestion.amount }}</span>
+                            </div>
+                            {% if request.user.id == suggestion.from_user.id %}
+                                <a href="{% url 'settlements:create' group.pk %}?to_user={{ suggestion.to_user.id }}&amount={{ suggestion.amount }}" class="btn btn-sm btn-primary w-100 mt-1">Pay Now</a>
+                            {% endif %}
                         </li>
                     {% endfor %}
                 </ul>
@@ -75,6 +136,14 @@
                             <div>
                                 <h5 class="mb-1 fw-bold text-light">{{ expense.title }}</h5>
                                 <p class="text-muted small mb-0">Created by {{ expense.created_by.username }} on {{ expense.date|date:"M d, Y" }}</p>
+                                {% if expense.contributions.exists %}
+                                <p class="text-muted small mb-0 mt-1">
+                                    <i class="fa-solid fa-check-double me-1 text-success"></i> Paid by: 
+                                    {% for contrib in expense.contributions.all %}
+                                        {{ contrib.user.get_full_name|default:contrib.user.username }}{% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                </p>
+                                {% endif %}
                                 <span class="badge bg-secondary mt-1">{{ expense.get_category_display }}</span>
                             </div>
                             <div class="text-end">

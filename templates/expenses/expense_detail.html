@@ -73,7 +73,7 @@
                     <h5 class="text-light mb-3"><i class="fa-solid fa-hand-holding-dollar me-2"></i>Contributions</h5>
                     <div class="list-group list-group-flush glass-card rounded overflow-hidden mb-4">
                         {% for contribution in contributions %}
-                        <div class="list-group-item bg-transparent border-secondary text-light d-flex justify-content-between align-items-center py-3">
+                        <div class="list-group-item bg-transparent border-secondary d-flex justify-content-between align-items-center py-3">
                             <div>
                                 <strong>{{ contribution.user.get_full_name|default:contribution.user.username }}</strong>
                                 <span class="text-muted ms-2">paid</span>
@@ -102,6 +102,26 @@
                         {% endfor %}
                     </div>
                 </div>
+                
+                {% if missing_shares %}
+                <!-- Still Owes List -->
+                <div>
+                    <h5 class="text-light mb-3"><i class="fa-solid fa-clock-rotate-left me-2 text-warning"></i>Yet to Pay Their Share</h5>
+                    <div class="list-group list-group-flush glass-card rounded overflow-hidden mb-4">
+                        {% for missing in missing_shares %}
+                        <div class="list-group-item bg-transparent border-secondary d-flex justify-content-between align-items-center py-3">
+                            <div>
+                                <strong>{{ missing.display_name }}</strong>
+                            </div>
+                            <div class="text-end">
+                                <span class="text-warning fw-bold d-block">owes {{ expense.currency }} {{ missing.shortfall }}</span>
+                                <small class="text-muted">to complete their share</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
 
                 <!-- Add Contribution Form -->
                 <div class="glass-card p-4" style="border: 1px solid rgba(110, 87, 224, 0.3);">

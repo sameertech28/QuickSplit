@@ -66,7 +66,9 @@ def dashboard_view(request):
     """Main dashboard showing groups, balances, and activity."""
     user = request.user
     memberships = GroupMember.objects.filter(user=user).select_related('group')
-    groups = [m.group for m in memberships]
+    
+    active_groups = [m.group for m in memberships if m.group.is_active]
+    archived_groups = [m.group for m in memberships if not m.group.is_active]
 
     # Calculate summary stats
     total_contributed = Contribution.objects.filter(
@@ -81,19 +83,15 @@ def dashboard_view(request):
         total=Sum('amount')
     )['total'] or 0
 
-    recent_expenses = Expense.objects.filter(
-        group__in=groups
-    ).select_related('created_by', 'group').order_by('-date')[:10]
-
     # Fetch pending invitations for this user (case-insensitive)
     pending_invitations = Invitation.objects.filter(email__iexact=user.email, status='pending').select_related('group', 'invited_by')
 
     context = {
-        'groups': groups,
+        'active_groups': active_groups,
+        'archived_groups': archived_groups,
         'total_contributed': total_contributed,
         'total_created_expenses': total_created_expenses,
-        'recent_expenses': recent_expenses,
-        'group_count': len(groups),
+        'group_count': len(active_groups),
         'pending_invitations': pending_invitations,
     }
     return render(request, 'dashboard.html', context)
