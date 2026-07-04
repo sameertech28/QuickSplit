@@ -11,4 +11,5 @@ urlpatterns = [
     path('<int:pk>/invite/', views.invite_member, name='invite'),
     path('<int:pk>/remove-member/<int:user_id>/', views.remove_member, name='remove_member'),
     path('invitation/<int:pk>/accept/', views.accept_invitation, name='accept_invitation'),
+    path('<int:pk>/archive/', views.group_archive, name='archive'),
 ]

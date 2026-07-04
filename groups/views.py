@@ -7,6 +7,7 @@ from django.db import transaction
 from .models import Group, GroupMember, Invitation
 from .forms import GroupForm, InviteMemberForm
 from expenses.models import Expense
+from .utils import calculate_group_balances, get_suggested_settlements
 
 
 @login_required
@@ -41,8 +42,13 @@ def group_detail(request, pk):
         return redirect('dashboard')
     
     members = group.group_members.select_related('user').all()
-    expenses = group.expenses.select_related('created_by').order_by('-date')[:10]
+    expenses = group.expenses.select_related('created_by').prefetch_related('contributions__user').order_by('-date')[:10]
     invitations = group.invitations.filter(status='pending')
+    
+    # Calculate balances
+    balance_data = calculate_group_balances(group)
+    balances = balance_data.get('balances', {})
+    suggested_settlements = get_suggested_settlements(balances)
     
     # Check if current user is admin
     is_admin = members.filter(user=request.user, role='admin').exists()
@@ -53,6 +59,10 @@ def group_detail(request, pk):
         'expenses': expenses,
         'invitations': invitations,
         'is_admin': is_admin,
+        'balances': balances.values(),
+        'total_group_spend': balance_data.get('total_expenses', 0),
+        'share_per_person': balance_data.get('share_per_person', 0),
+        'suggested_settlements': suggested_settlements,
     }
     return render(request, 'groups/group_detail.html', context)
 
@@ -174,3 +184,24 @@ def group_delete(request, pk):
         return redirect('dashboard')
         
     return render(request, 'groups/group_confirm_delete.html', {'group': group})
+
+
+@login_required
+def group_archive(request, pk):
+    """Toggle a group's active status (archive/unarchive). Admin only."""
+    group = get_object_or_404(Group, pk=pk)
+
+    if not GroupMember.objects.filter(user=request.user, group=group, role='admin').exists():
+        messages.error(request, "Only group admins can archive or restore groups.")
+        return redirect('groups:detail', pk=group.pk)
+
+    if request.method == 'POST':
+        group.is_active = not group.is_active
+        group.save()
+        if group.is_active:
+            messages.success(request, f'"{group.name}" has been restored to active groups.')
+        else:
+            messages.success(request, f'"{group.name}" has been marked as complete and archived.')
+        return redirect('dashboard')
+
+    return redirect('groups:detail', pk=group.pk)
