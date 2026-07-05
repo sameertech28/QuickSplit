@@ -10,4 +10,5 @@ urlpatterns = [
     path('<int:pk>/delete/', views.expense_delete, name='delete'),
     path('<int:expense_id>/contribute/', views.contribution_add, name='contribution_add'),
     path('contribution/<int:pk>/delete/', views.contribution_delete, name='contribution_delete'),
+    path('group/<int:group_id>/scan-receipt/', views.scan_receipt, name='scan_receipt'),
 ]

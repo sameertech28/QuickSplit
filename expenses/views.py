@@ -5,7 +5,14 @@ from django.db import transaction
 
 from .models import Expense, Contribution
 from .forms import ExpenseForm, ContributionForm
+from .utils import extract_expense_from_receipt
+from core.utils import convert_currency
+from core.notifications import notify_new_expense
 from groups.models import Group, GroupMember
+import tempfile
+import os
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 
 
 def _is_group_member(user, group):
@@ -32,6 +39,10 @@ def expense_create(request, group_id):
             expense.group = group
             expense.created_by = request.user
             expense.save()
+            
+            # Send notification
+            notify_new_expense(expense)
+            
             messages.success(request, 'Expense added successfully!')
             return redirect('expenses:detail', pk=expense.pk)
     else:
@@ -75,8 +86,17 @@ def expense_detail(request, pk):
                 'shortfall': shortfall
             })
 
+    converted_amount = None
+    if expense.currency != group.currency:
+        try:
+            converted = convert_currency(expense.amount, expense.currency, group.currency)
+            converted_amount = round(converted, 2)
+        except Exception:
+            pass
+
     return render(request, 'expenses/expense_detail.html', {
         'expense': expense,
+        'converted_amount': converted_amount,
         'contributions': contributions,
         'contribution_form': contribution_form,
         'group': group,
@@ -169,3 +189,28 @@ def contribution_delete(request, pk):
         messages.success(request, 'Your contribution has been removed.')
 
     return redirect('expenses:detail', pk=expense.pk)
+
+
+@login_required
+@require_POST
+def scan_receipt(request, group_id):
+    group = get_object_or_404(Group, pk=group_id)
+    if not _is_group_admin(request.user, group):
+        return JsonResponse({'success': False, 'error': 'Only admins can scan receipts'}, status=403)
+        
+    if 'receipt' not in request.FILES:
+        return JsonResponse({'success': False, 'error': 'No image provided'}, status=400)
+        
+    receipt_file = request.FILES['receipt']
+    
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_file:
+        for chunk in receipt_file.chunks():
+            temp_file.write(chunk)
+        temp_path = temp_file.name
+        
+    try:
+        ocr_result = extract_expense_from_receipt(temp_path)
+        return JsonResponse(ocr_result)
+    finally:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)

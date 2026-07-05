@@ -12,6 +12,15 @@
                     <h2 class="fw-bold">{{ action }} Expense</h2>
                     <p class="text-muted">for {{ group.name }}</p>
                 </div>
+                
+                {% if action == 'Add' %}
+                <div class="mb-4 p-3 border rounded bg-dark border-secondary">
+                    <h6 class="mb-2 text-light"><i class="bi bi-camera"></i> Quick Scan Receipt</h6>
+                    <input type="file" id="receiptScanner" class="form-control form-control-sm bg-dark text-light border-secondary mb-2" accept="image/*">
+                    <button type="button" id="scanBtn" class="btn btn-sm btn-outline-info w-100">Scan & Autofill</button>
+                    <div id="scanResult" class="mt-2 small" style="display:none;"></div>
+                </div>
+                {% endif %}
 
                 <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
@@ -29,4 +38,56 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const scanBtn = document.getElementById('scanBtn');
+        const scannerInput = document.getElementById('receiptScanner');
+        const scanResult = document.getElementById('scanResult');
+
+        if(scanBtn && scannerInput) {
+            scanBtn.addEventListener('click', async function() {
+                if(!scannerInput.files[0]) {
+                    alert("Please select an image first.");
+                    return;
+                }
+                
+                scanBtn.disabled = true;
+                scanBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Scanning...';
+                scanResult.style.display = 'none';
+                
+                const formData = new FormData();
+                formData.append('receipt', scannerInput.files[0]);
+                formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+                
+                try {
+                    const response = await fetch("{% url 'expenses:scan_receipt' group.pk %}", {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if(data.success) {
+                        document.getElementById('id_title').value = data.title;
+                        document.getElementById('id_amount').value = data.amount.toFixed(2);
+                        scanResult.innerHTML = `<span class="text-success"><i class="bi bi-check-circle"></i> Extracted: ${data.title} - ${data.amount}</span>`;
+                        scanResult.style.display = 'block';
+                    } else {
+                        scanResult.innerHTML = `<span class="text-danger"><i class="bi bi-exclamation-triangle"></i> Error: ${data.error || 'Failed to scan'}</span>`;
+                        scanResult.style.display = 'block';
+                    }
+                } catch(e) {
+                    scanResult.innerHTML = `<span class="text-danger"><i class="bi bi-exclamation-triangle"></i> Network error during scan</span>`;
+                    scanResult.style.display = 'block';
+                } finally {
+                    scanBtn.disabled = false;
+                    scanBtn.textContent = 'Scan & Autofill';
+                }
+            });
+        }
+    });
+</script>
 {% endblock %}
