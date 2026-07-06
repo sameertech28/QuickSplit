@@ -19,7 +19,7 @@ class UserProfile(models.Model):
         max_length=20, blank=True,
         validators=[RegexValidator(r'^\+?1?\d{9,15}$', 'Enter a valid phone number.')]
     )
-    default_currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default='USD')
+    default_currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default='NPR')
     bio = models.CharField(max_length=200, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
