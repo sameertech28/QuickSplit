@@ -70,13 +70,6 @@ def dashboard_view(request):
     active_groups = [m.group for m in memberships if m.group.is_active]
     archived_groups = [m.group for m in memberships if not m.group.is_active]
 
-    # Calculate summary stats
-    total_contributed = Contribution.objects.filter(
-        user=user
-    ).aggregate(
-        total=Sum('amount')
-    )['total'] or 0
-
 
     # Fetch pending invitations for this user (case-insensitive)
     pending_invitations = Invitation.objects.filter(email__iexact=user.email, status='pending').select_related('group', 'invited_by')
@@ -84,7 +77,6 @@ def dashboard_view(request):
     context = {
         'active_groups': active_groups,
         'archived_groups': archived_groups,
-        'total_contributed': total_contributed,
         'group_count': len(active_groups),
         'pending_invitations': pending_invitations,
     }
