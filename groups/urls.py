@@ -12,4 +12,5 @@ urlpatterns = [
     path('<int:pk>/remove-member/<int:user_id>/', views.remove_member, name='remove_member'),
     path('invitation/<int:pk>/accept/', views.accept_invitation, name='accept_invitation'),
     path('<int:pk>/archive/', views.group_archive, name='archive'),
+    path('<int:pk>/export/', views.export_group_csv, name='export_csv'),
 ]

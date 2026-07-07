@@ -3,11 +3,15 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
+import csv
+from django.http import HttpResponse
 
 from .models import Group, GroupMember, Invitation
 from .forms import GroupForm, InviteMemberForm
 from expenses.models import Expense
 from .utils import calculate_group_balances, get_suggested_settlements
+import json
+from django.db.models import Sum
 
 
 @login_required
@@ -53,6 +57,12 @@ def group_detail(request, pk):
     # Check if current user is admin
     is_admin = members.filter(user=request.user, role='admin').exists()
 
+    # Prepare data for category chart
+    category_data = group.expenses.values('category').annotate(total=Sum('amount')).order_by('-total')
+    category_dict = dict(Expense.CATEGORY_CHOICES)
+    chart_labels = json.dumps([str(category_dict.get(c['category'], c['category'])) for c in category_data])
+    chart_data = json.dumps([float(c['total']) for c in category_data])
+
     context = {
         'group': group,
         'members': members,
@@ -63,6 +73,8 @@ def group_detail(request, pk):
         'total_group_spend': balance_data.get('total_expenses', 0),
         'share_per_person': balance_data.get('share_per_person', 0),
         'suggested_settlements': suggested_settlements,
+        'chart_labels': chart_labels,
+        'chart_data': chart_data,
     }
     return render(request, 'groups/group_detail.html', context)
 
@@ -205,3 +217,36 @@ def group_archive(request, pk):
         return redirect('dashboard')
 
     return redirect('groups:detail', pk=group.pk)
+
+
+@login_required
+def export_group_csv(request, pk):
+    """Export group expenses to a CSV file."""
+    group = get_object_or_404(Group, pk=pk)
+    
+    if not GroupMember.objects.filter(user=request.user, group=group).exists():
+        messages.error(request, "You don't have access to this group.")
+        return redirect('dashboard')
+        
+    response = HttpResponse(
+        content_type='text/csv',
+        headers={'Content-Disposition': f'attachment; filename="{group.name.replace(" ", "_")}_expenses.csv"'},
+    )
+    
+    writer = csv.writer(response)
+    writer.writerow(['Date', 'Title', 'Category', 'Paid By', 'Amount', 'Currency', 'Total Contributed'])
+    
+    expenses = group.expenses.select_related('created_by').prefetch_related('contributions')
+    for exp in expenses:
+        paid_by = exp.created_by.get_full_name() or exp.created_by.username
+        writer.writerow([
+            exp.date.strftime('%Y-%m-%d'),
+            exp.title,
+            exp.get_category_display(),
+            paid_by,
+            exp.amount,
+            exp.currency,
+            exp.total_contributed
+        ])
+        
+    return response
