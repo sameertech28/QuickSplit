@@ -77,11 +77,6 @@ def dashboard_view(request):
         total=Sum('amount')
     )['total'] or 0
 
-    total_created_expenses = Expense.objects.filter(
-        created_by=user
-    ).aggregate(
-        total=Sum('amount')
-    )['total'] or 0
 
     # Fetch pending invitations for this user (case-insensitive)
     pending_invitations = Invitation.objects.filter(email__iexact=user.email, status='pending').select_related('group', 'invited_by')
@@ -90,7 +85,6 @@ def dashboard_view(request):
         'active_groups': active_groups,
         'archived_groups': archived_groups,
         'total_contributed': total_contributed,
-        'total_created_expenses': total_created_expenses,
         'group_count': len(active_groups),
         'pending_invitations': pending_invitations,
     }
