@@ -95,6 +95,23 @@
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     
+    <!-- UI Polish Scripts -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add loading spinner to buttons on form submit
+            document.querySelectorAll('form').forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    const submitBtn = this.querySelector('button[type="submit"]');
+                    if(submitBtn && !submitBtn.classList.contains('btn-loading')) {
+                        submitBtn.classList.add('btn-loading');
+                        // Optional timeout to reset button just in case form submit fails silently
+                        setTimeout(() => submitBtn.classList.remove('btn-loading'), 10000);
+                    }
+                });
+            });
+        });
+    </script>
+    
     {% block extra_js %}{% endblock %}
 </body>
 </html>
