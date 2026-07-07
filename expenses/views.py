@@ -7,7 +7,7 @@ from .models import Expense, Contribution
 from .forms import ExpenseForm, ContributionForm
 from .utils import extract_expense_from_receipt
 from core.utils import convert_currency
-from core.notifications import notify_new_expense
+
 from groups.models import Group, GroupMember
 import tempfile
 import os
@@ -40,9 +40,7 @@ def expense_create(request, group_id):
             expense.created_by = request.user
             expense.save()
             
-            # Send notification
-            notify_new_expense(expense)
-            
+
             messages.success(request, 'Expense added successfully!')
             return redirect('expenses:detail', pk=expense.pk)
     else:
