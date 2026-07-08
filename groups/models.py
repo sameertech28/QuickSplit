@@ -14,12 +14,23 @@ class Group(models.Model):
         ('other', 'Other'),
     ]
 
+    CURRENCY_CHOICES = [
+        ('NPR', 'Nepalese Rupee (NPR)'),
+        ('USD', 'US Dollar (USD)'),
+        ('EUR', 'Euro (EUR)'),
+        ('INR', 'Indian Rupee (INR)'),
+        ('GBP', 'British Pound (GBP)'),
+        ('AUD', 'Australian Dollar (AUD)'),
+        ('CAD', 'Canadian Dollar (CAD)'),
+        ('SGD', 'Singapore Dollar (SGD)'),
+    ]
+
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='other')
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_groups')
     members = models.ManyToManyField(User, through='GroupMember', related_name='expense_groups')
-    currency = models.CharField(max_length=3, default='NPR')
+    currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default='NPR')
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

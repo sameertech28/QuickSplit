@@ -10,7 +10,7 @@ class GroupForm(forms.ModelForm):
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Goa Trip 2024'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Optional description...'}),
             'category': forms.Select(attrs={'class': 'form-select'}),
-            'currency': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. USD, INR'}),
+            'currency': forms.Select(attrs={'class': 'form-select'}),
         }
 
 

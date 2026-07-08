@@ -207,7 +207,9 @@ def scan_receipt(request, group_id):
         temp_path = temp_file.name
         
     try:
-        ocr_result = extract_expense_from_receipt(temp_path)
+        ocr_result = extract_expense_from_receipt(temp_path, expected_currency=group.currency)
+        if not ocr_result.get('success'):
+            return JsonResponse({'success': False, 'error': ocr_result.get('error')}, status=400)
         return JsonResponse(ocr_result)
     finally:
         if os.path.exists(temp_path):
